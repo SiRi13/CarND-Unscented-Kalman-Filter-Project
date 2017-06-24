@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 #include "Eigen/Dense"
+#include "ground_truth_package.hpp"
 #include "measurement_package.h"
 #include "tools.h"
 
