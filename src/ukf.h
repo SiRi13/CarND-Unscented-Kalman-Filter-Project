@@ -1,35 +1,22 @@
 #ifndef UKF_H
 #define UKF_H
 
-#include "measurement_package.h"
-#include "Eigen/Dense"
-#include <vector>
-#include <string>
 #include <fstream>
+#include <string>
+#include <vector>
+#include "Eigen/Dense"
+#include "measurement_package.h"
+#include "tools.h"
 
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
 
 class UKF {
-public:
+ public:
+  Tools tools_;
 
   ///* initially set to false, set to true in first call of ProcessMeasurement
   bool is_initialized_;
-
-  ///* if this is false, laser measurements will be ignored (except for init)
-  bool use_laser_;
-
-  ///* if this is false, radar measurements will be ignored (except for init)
-  bool use_radar_;
-
-  ///* state vector: [pos1 pos2 vel_abs yaw_angle yaw_rate] in SI units and rad
-  VectorXd x_;
-
-  ///* state covariance matrix
-  MatrixXd P_;
-
-  ///* predicted sigma points matrix
-  MatrixXd Xsig_pred_;
 
   ///* time when the state is true, in us
   long long time_us_;
@@ -53,20 +40,48 @@ public:
   double std_radphi_;
 
   ///* Radar measurement noise standard deviation radius change in m/s
-  double std_radrd_ ;
+  double std_radrd_;
 
   ///* Weights of sigma points
   VectorXd weights_;
 
+  ///* Sigma point spreading parameter
+  double lambda_x_ = 3 - n_x_;
+  double lambda_aug_ = 3 - n_aug_;
+
+  // radar measurement dimension
+  int n_z_radar_ = 3;
+
+  // lidar measurement dimension
+  int n_z_laser_ = 2;
+
   ///* State dimension
-  int n_x_;
+  int n_x_ = 5;
 
   ///* Augmented state dimension
-  int n_aug_;
+  int n_aug_ = 7;
 
-  ///* Sigma point spreading parameter
-  double lambda_;
+  // amount of sigma points
+  int n_sig_ = 2 * n_aug_ + 1;
 
+  ///* if this is false, laser measurements will be ignored (except for init)
+  bool use_laser_ = true;
+
+  ///* if this is false, radar measurements will be ignored (except for init)
+  bool use_radar_ = true;
+
+  double NIS_radar_;
+
+  double NIS_lidar_;
+
+  ///* state vector: [pos1 pos2 vel_abs yaw_angle yaw_rate] in SI units and rad
+  VectorXd x_;
+
+  ///* state covariance matrix
+  MatrixXd P_;
+
+  ///* predicted sigma points matrix
+  MatrixXd Xsig_pred_;
 
   /**
    * Constructor
