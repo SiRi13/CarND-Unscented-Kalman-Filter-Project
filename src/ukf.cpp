@@ -227,8 +227,7 @@ void UKF::Prediction(double delta_t) {
   for (i = 0; i < n_sig_aug_; ++i) {
     VectorXd x_diff = Xsig_pred_.col(i) - x_;
 
-    while (x_diff(3) > M_PI) x_diff(3) -= 2.0 * M_PI;
-    while (x_diff(3) < -M_PI) x_diff(3) += 2.0 * M_PI;
+    x_diff(3) = tools_.NormalizeAngle(x_diff(3));
 
     P_ += (weights_(i) * x_diff * x_diff.transpose());
   }
@@ -329,8 +328,7 @@ void UKF::UpdateRadar(MeasurementPackage meas_package) {
   for (i = 0; i < n_sig_aug_; ++i) {
     VectorXd z_diff = Zsig.col(i) - z_pred;
 
-    while (z_diff(1) > M_PI) z_diff(1) -= 2.0 * M_PI;
-    while (z_diff(1) < -M_PI) z_diff(1) += 2.0 * M_PI;
+    z_diff(1) = tools_.NormalizeAngle(z_diff(1));
 
     S += (weights_(i) * z_diff * z_diff.transpose());
   }
@@ -351,11 +349,8 @@ void UKF::UpdateRadar(MeasurementPackage meas_package) {
     VectorXd x_diff = Xsig_pred_.col(i) - x_;
     VectorXd z_diff = Zsig.col(i) - z_pred;
 
-    while (x_diff(3) > M_PI) x_diff(3) -= 2.0 * M_PI;
-    while (x_diff(3) < -M_PI) x_diff(3) += 2.0 * M_PI;
-
-    while (z_diff(1) > M_PI) z_diff(1) -= 2.0 * M_PI;
-    while (z_diff(1) < -M_PI) z_diff(1) += 2.0 * M_PI;
+    x_diff(3) = tools_.NormalizeAngle(x_diff(3));
+    z_diff(1) = tools_.NormalizeAngle(z_diff(1));
 
     Tc += (weights_(i) * x_diff * z_diff.transpose());
   }
@@ -367,8 +362,7 @@ void UKF::UpdateRadar(MeasurementPackage meas_package) {
   // udpate state mean and covariance matrix
   VectorXd z_diff = z - z_pred;
 
-  while (z_diff(1) > M_PI) z_diff(1) -= 2.0 * M_PI;
-  while (z_diff(1) < -M_PI) z_diff(1) += 2.0 * M_PI;
+  z_diff(1) = tools_.NormalizeAngle(z_diff(1));
 
   P_ -= (K * S * K.transpose());
   x_ += (K * z_diff);
