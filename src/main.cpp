@@ -40,8 +40,8 @@ std::string hasData(std::string s) {
 }
 
 int main(int argc, char *argv[]) {
-  bool lidar = true;
-  bool radar = true;
+  bool lidar = false;
+  bool radar = false;
   string input_file_name;
   string output_file_name;
 
@@ -49,16 +49,15 @@ int main(int argc, char *argv[]) {
       "Unscented Kalman Filter",
       "Runs Unscented Kalman Filter on data from file or from simulator");
 
-  options.add_options()
-    ("help", "Print help")
-    ("l,lidar", "Disable LIDAR data", cxxopts::value<bool>(lidar))
-    ("r,radar", "Disable RADAR data", cxxopts::value<bool>(radar))
-    ("i,input", "LIDAR/RADAR data from file disables simulator",
-      cxxopts::value<std::string>(input_file_name), "txt")
-    ("o,output", "Save output values and RSME; needs input-file",
-      cxxopts::value<std::string>(output_file_name)->default_value("output.txt"),
-      "txt")
-  ;
+  options.add_options()("help", "Print help")("l,lidar", "Disable LIDAR data",
+                                              cxxopts::value<bool>(lidar))(
+      "r,radar", "Disable RADAR data", cxxopts::value<bool>(radar))(
+      "i,input", "LIDAR/RADAR data from file disables simulator",
+      cxxopts::value<std::string>(input_file_name),
+      "txt")("o,output", "Save output values and RSME; needs input-file",
+             cxxopts::value<std::string>(output_file_name)
+                 ->default_value("output.txt"),
+             "txt");
 
   options.parse(argc, argv);
   if (options.count("help")) {
@@ -144,7 +143,7 @@ int main(int argc, char *argv[]) {
     }
 
     // Create a UKF instance
-    UKF ukf(lidar, radar);
+    UKF ukf(!lidar, !radar);
 
     // used to compute the RMSE later
     vector<VectorXd> estimations;
@@ -273,7 +272,7 @@ int main(int argc, char *argv[]) {
     uWS::Hub h;
 
     // Create a Kalman Filter instance
-    UKF ukf(lidar, radar);
+    UKF ukf(!lidar, !radar);
 
     // used to compute the RMSE later
     Tools tools;

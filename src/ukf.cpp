@@ -12,6 +12,7 @@ using std::vector;
  * Initializes Unscented Kalman filter
  */
 UKF::UKF(bool laser, bool radar) {
+  cout << "using laser/radar" << laser << "/" << radar << endl;
   // initialized?
   is_initialized_ = false;
 
