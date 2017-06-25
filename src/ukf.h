@@ -87,6 +87,15 @@ class UKF {
   ///* predicted sigma points matrix
   MatrixXd Xsig_pred_;
 
+  // process noise covariance matrix
+  MatrixXd Q_;
+
+  // measurement noise covariance matrix radar
+  MatrixXd R_radar_;
+
+  // measurement noise covariance matrix lidar
+  MatrixXd R_lidar_;
+
   /**
    * Constructor
    */

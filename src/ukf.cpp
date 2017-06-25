@@ -82,6 +82,16 @@ UKF::UKF() {
   // init predicted sigma points
   Xsig_pred_ = MatrixXd::Zero(n_x_, n_sig_aug_);
 
+  Q_ = MatrixXd(2, 2);
+  Q_ << (std_a_ * std_a_), 0, 0, (std_yawdd_ * std_yawdd_);
+
+  R_radar_ = MatrixXd(n_z_radar_, n_z_radar_);
+  R_radar_ << (std_radr_ * std_radr_), 0, 0, 0, (std_radphi_ * std_radphi_), 0,
+      0, 0, (std_radrd_ * std_radrd_);
+
+  R_lidar_ = MatrixXd(n_z_laser_, n_z_laser_);
+  R_lidar_ << (std_laspx_ * std_laspx_), 0, 0, (std_laspy_ * std_laspy_);
+
   weights_ = VectorXd::Constant(n_sig_aug_, (0.5 * (lambda_aug_ + n_aug_)));
   weights_(0) = (lambda_aug_ / (lambda_aug_ + n_aug_));
 }
@@ -167,10 +177,11 @@ void UKF::Prediction(double delta_t) {
   // create augmented covariance matrix
   MatrixXd P_aug = MatrixXd::Zero(n_aug_, n_aug_);
   P_aug.topLeftCorner(n_x_, n_x_) = P_;
-  P_aug.bottomRightCorner<2, 2>() << (std_a_ * std_a_), 0, 0,
-      (std_yawdd_ * std_yawdd_);
+  P_aug.bottomRightCorner<2, 2>() << Q_;
+
   // create square root matrix
   MatrixXd A_aug = P_aug.llt().matrixL();
+
   // create augmented sigma points
   MatrixXd Xsig_aug = MatrixXd::Zero(n_aug_, n_sig_aug_);
   Xsig_aug.col(0) = x_aug;
@@ -263,9 +274,7 @@ void UKF::UpdateLidar(MeasurementPackage meas_package) {
     S += (weights_(i) * z_diff * z_diff.transpose());
   }
   // add measurement noise covariance matrix
-  MatrixXd R = MatrixXd(n_z_laser_, n_z_laser_);
-  R << (std_laspx_ * std_laspx_), 0, 0, (std_laspy_ * std_laspy_);
-  S += R;
+  S += R_lidar_;
 
   /*****************************************
    *     Update State and Covariance       *
@@ -333,11 +342,9 @@ void UKF::UpdateRadar(MeasurementPackage meas_package) {
     S += (weights_(i) * z_diff * z_diff.transpose());
   }
   cout << "S: " << endl << S << endl;
+
   // add process noise R to covariance matrix S
-  MatrixXd R = MatrixXd(n_z_radar_, n_z_radar_);
-  R << (std_radr_ * std_radr_), 0, 0, 0, (std_radphi_ * std_radphi_), 0, 0, 0,
-      (std_radrd_ * std_radrd_);
-  S += R;
+  S += R_radar_;
   cout << "S + R: " << endl << S << endl;
 
   /*****************************************
