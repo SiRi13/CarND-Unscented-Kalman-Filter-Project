@@ -158,40 +158,32 @@ void UKF::Prediction(double delta_t) {
   int i = 0;
 
   /*****************************************
-   *          Create Sigma Points          *
-   FIXME: not needed
-  MatrixXd Xsig = MatrixXd(n_x_, n_sig_x_);
-  MatrixXd A = P_.llt().matrixL();
-  Xsig.col(0) = x_;
-  A *= sqrt(lambda_x_ + n_x_);
-  for (i = 0; i < n_x_; ++i) {
-    Xsig.col(i + 1) = x_ + A.col(i);
-    Xsig.col(i + n_x_ + 1) = x_ - A.col(i);
-  }
-  cout << "Xsig = " << endl << Xsig << endl;
-  *****************************************/
-
-  /*****************************************
    *     Create Augmented Sigma Points      *
    *****************************************/
   // create augmented mean state
   VectorXd x_aug = VectorXd::Zero(n_aug_);
   x_aug.head(n_x_) = x_;
+
   // create augmented covariance matrix
   MatrixXd P_aug = MatrixXd::Zero(n_aug_, n_aug_);
   P_aug.topLeftCorner(n_x_, n_x_) = P_;
-  P_aug(5, 5) = std_a_ * std_a_;
-  P_aug(6, 6) = std_yawdd_ * std_yawdd_;
+  P_aug.bottomRightCorner<2, 2>() << (std_a_ * std_a_), 0, 0,
+      (std_yawdd_ * std_yawdd_);
   // create square root matrix
   MatrixXd A_aug = P_aug.llt().matrixL();
   // create augmented sigma points
   MatrixXd Xsig_aug = MatrixXd::Zero(n_aug_, n_sig_aug_);
+  Xsig_aug.col(0) = x_aug;
   A_aug *= sqrt(lambda_aug_ + n_aug_);
   for (i = 0; i < n_aug_; ++i) {
     Xsig_aug.col(i + 1) = x_aug + A_aug.col(i);
     Xsig_aug.col(i + n_aug_ + 1) = x_aug - A_aug.col(i);
   }
-  cout << "Xsig_aug = " << endl << Xsig_aug << endl;
+  // cout << "x_aug / P_aug / A_aug / Xsig_aug" << endl
+  //      << x_aug << endl
+  //      << P_aug << endl
+  //      << A_aug << endl
+  //      << Xsig_aug << endl;
 
   /*****************************************
    *         Predict Sigma Points           *
