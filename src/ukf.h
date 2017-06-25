@@ -47,29 +47,32 @@ class UKF {
   VectorXd weights_;
 
   ///* Sigma point spreading parameter
-  double lambda_x_ = 3 - n_x_;
-  double lambda_aug_ = 3 - n_aug_;
+  double lambda_x_;
+  double lambda_aug_;
 
   // radar measurement dimension
-  int n_z_radar_ = 3;
+  int n_z_radar_;
 
   // lidar measurement dimension
-  int n_z_laser_ = 2;
+  int n_z_laser_;
 
   ///* State dimension
-  int n_x_ = 5;
+  int n_x_;
 
   ///* Augmented state dimension
-  int n_aug_ = 7;
+  int n_aug_;
 
   // amount of sigma points
-  int n_sig_ = 2 * n_aug_ + 1;
+  int n_sig_x_;
+
+  // amount of augmented sigma points
+  int n_sig_aug_;
 
   ///* if this is false, laser measurements will be ignored (except for init)
-  bool use_laser_ = true;
+  bool use_laser_;
 
   ///* if this is false, radar measurements will be ignored (except for init)
-  bool use_radar_ = true;
+  bool use_radar_;
 
   double NIS_radar_;
 
