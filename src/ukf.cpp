@@ -92,7 +92,7 @@ UKF::UKF() {
   R_lidar_ = MatrixXd(n_z_laser_, n_z_laser_);
   R_lidar_ << (std_laspx_ * std_laspx_), 0, 0, (std_laspy_ * std_laspy_);
 
-  weights_ = VectorXd::Constant(n_sig_aug_, (0.5 * (lambda_aug_ + n_aug_)));
+  weights_ = VectorXd::Constant(n_sig_aug_, (1 / (2 * (lambda_aug_ + n_aug_))));
   weights_(0) = (lambda_aug_ / (lambda_aug_ + n_aug_));
 }
 
