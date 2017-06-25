@@ -1,6 +1,7 @@
 #include <math.h>
 #include <uWS/uWS.h>
 #include <iostream>
+#include "cxxopts.hpp"
 #include "json.hpp"
 #include "tools.h"
 #include "ukf.h"
@@ -10,42 +11,14 @@ using namespace std;
 // for convenience
 using json = nlohmann::json;
 
-bool check_arguments(int argc, char *argv[], bool &gotInputOnly,
-                     bool &gotBoth) {
-  string usage_instructions = "Usage instructions: ";
-  usage_instructions += argv[0];
-  usage_instructions += " path/to/input.txt output.txt";
-
-  bool has_valid_args = false;
-
-  // make sure the user has provided input and output files
-  if (argc < 2) {
-    return false;
-  } else if (argc == 2) {
-    gotInputOnly = true;
-  } else if (argc == 3) {
-    gotBoth = true;
-  } else if (argc > 3) {
-    cerr << "Too many arguments.\n" << usage_instructions << endl;
-  }
-
-  if (!has_valid_args && !gotInputOnly) {
-    exit(EXIT_FAILURE);
-  }
-
-  cout << "valid_args / gotInputOnly: " << has_valid_args << " / "
-       << gotInputOnly << endl;
-  return true;
-}
-
 void check_files(ifstream &in_file, string &in_name, ofstream &out_file,
-                 string &out_name, bool &gotInputOnly) {
+                 string &out_name, bool gotOutput) {
   if (!in_file.is_open()) {
     cerr << "Cannot open input file: " << in_name << endl;
     exit(EXIT_FAILURE);
   }
 
-  if (!gotInputOnly && !out_file.is_open()) {
+  if (gotOutput && !out_file.is_open()) {
     cerr << "Cannot open output file: " << out_name << endl;
     exit(EXIT_FAILURE);
   }
@@ -67,19 +40,42 @@ std::string hasData(std::string s) {
 }
 
 int main(int argc, char *argv[]) {
-  bool gotInputOnly = false;
-  bool gotBoth = false;
-  if (check_arguments(argc, argv, gotInputOnly, gotBoth)) {
-    string in_file_name = argv[1];
-    ifstream in_file(in_file_name.c_str(), ifstream::in);
-    string out_file_name;
+  bool lidar = true;
+  bool radar = true;
+  string input_file_name;
+  string output_file_name;
+
+  cxxopts::Options options(
+      "Unscented Kalman Filter",
+      "Runs Unscented Kalman Filter on data from file or from simulator");
+
+  options.add_options()
+    ("help", "Print help")
+    ("l,lidar", "Disable LIDAR data", cxxopts::value<bool>(lidar))
+    ("r,radar", "Disable RADAR data", cxxopts::value<bool>(radar))
+    ("i,input", "LIDAR/RADAR data from file disables simulator",
+      cxxopts::value<std::string>(input_file_name), "txt")
+    ("o,output", "Save output values and RSME; needs input-file",
+      cxxopts::value<std::string>(output_file_name)->default_value("output.txt"),
+      "txt")
+  ;
+
+  options.parse(argc, argv);
+  if (options.count("help")) {
+    std::cout << options.help({""}) << std::endl;
+    exit(0);
+  }
+
+  if (input_file_name.length() > 0) {
+    ifstream in_file(input_file_name.c_str(), ifstream::in);
     ofstream out_file;
-    if (!gotInputOnly) {
-      out_file_name = argv[2];
-      out_file.open(out_file_name.c_str(), ofstream::out);
+    bool gotOutput = output_file_name.length() > 0;
+    if (gotOutput) {
+      out_file.open(output_file_name.c_str(), ofstream::out);
     }
 
-    check_files(in_file, in_file_name, out_file, out_file_name, gotInputOnly);
+    check_files(in_file, input_file_name, out_file, output_file_name,
+                gotOutput);
 
     /**********************************************
      *  Set Measurements                          *
@@ -148,7 +144,7 @@ int main(int argc, char *argv[]) {
     }
 
     // Create a UKF instance
-    UKF ukf(true, true);
+    UKF ukf(lidar, radar);
 
     // used to compute the RMSE later
     vector<VectorXd> estimations;
@@ -159,7 +155,7 @@ int main(int argc, char *argv[]) {
 
     size_t number_of_measurements = measurement_pack_list.size();
 
-    if (!gotInputOnly) {
+    if (gotOutput) {
       // column names for output file
       out_file << "time_stamp"
                << "\t";
@@ -195,7 +191,7 @@ int main(int argc, char *argv[]) {
       // Call the UKF-based fusion
       ukf.ProcessMeasurement(measurement_pack_list[k]);
 
-      if (!gotInputOnly) {
+      if (gotOutput) {
         // timestamp
         out_file << measurement_pack_list[k].timestamp_ << "\t";  // pos1 - est
 
@@ -263,7 +259,7 @@ int main(int argc, char *argv[]) {
          << tools.CalculateRMSE(estimations, ground_truth) << endl;
 
     // close files
-    if (!gotInputOnly && out_file.is_open()) {
+    if (gotOutput && out_file.is_open()) {
       out_file.close();
     }
 
@@ -277,7 +273,7 @@ int main(int argc, char *argv[]) {
     uWS::Hub h;
 
     // Create a Kalman Filter instance
-    UKF ukf(true, true);
+    UKF ukf(lidar, radar);
 
     // used to compute the RMSE later
     Tools tools;
