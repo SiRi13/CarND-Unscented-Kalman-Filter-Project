@@ -75,9 +75,12 @@ UKF::UKF(bool laser, bool radar) {
 
   // initial state vector
   x_ = VectorXd::Ones(n_x_);
+  x_(n_x_ - 1) = 0.1;
 
   // initial covariance matrix
   P_ = MatrixXd::Identity(n_x_, n_x_);
+  P_(0, 0) = 0.15;
+  P_(1, 1) = 0.15;
 
   // init predicted sigma points
   Xsig_pred_ = MatrixXd::Zero(n_x_, n_sig_aug_);
