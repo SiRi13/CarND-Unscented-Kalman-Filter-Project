@@ -13,6 +13,14 @@ using Eigen::MatrixXd;
 using Eigen::VectorXd;
 
 class UKF {
+ private:
+  void AugmentedSigmaPoints(MatrixXd* Xsig_aug);
+  void SigmaPointPrediction(const MatrixXd Xsig_aug, double delta_t);
+  void PredictMeanAndCovariance();
+  void PredictRadarMeasurement(MatrixXd* Zsig, VectorXd* z_pred, MatrixXd* S);
+  void UpdateState(const MeasurementPackage meas_package, const MatrixXd Zsig,
+                   const VectorXd z_pred, const MatrixXd S);
+
  public:
   Tools tools_;
 
