@@ -18,8 +18,8 @@ class UKF {
   void SigmaPointPrediction(const MatrixXd Xsig_aug, double delta_t);
   void PredictMeanAndCovariance();
   void PredictRadarMeasurement(MatrixXd* Zsig, VectorXd* z_pred, MatrixXd* S);
-  void UpdateState(const MeasurementPackage meas_package, const MatrixXd Zsig,
-                   const VectorXd z_pred, const MatrixXd S);
+  double UpdateState(const MeasurementPackage meas_package, const MatrixXd Zsig,
+                     const VectorXd z_pred, const MatrixXd S, MatrixXd& Tc);
 
  public:
   Tools tools_;
@@ -107,7 +107,7 @@ class UKF {
   /**
    * Constructor
    */
-  UKF();
+  UKF(bool laser, bool radar);
 
   /**
    * Destructor

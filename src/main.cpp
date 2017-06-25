@@ -148,7 +148,7 @@ int main(int argc, char *argv[]) {
     }
 
     // Create a UKF instance
-    UKF ukf;
+    UKF ukf(true, true);
 
     // used to compute the RMSE later
     vector<VectorXd> estimations;
@@ -277,7 +277,7 @@ int main(int argc, char *argv[]) {
     uWS::Hub h;
 
     // Create a Kalman Filter instance
-    UKF ukf;
+    UKF ukf(true, true);
 
     // used to compute the RMSE later
     Tools tools;
