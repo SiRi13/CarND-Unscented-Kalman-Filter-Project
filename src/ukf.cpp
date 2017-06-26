@@ -303,7 +303,7 @@ void UKF::PredictMeanAndCovariance() {
     // x).transpose());
     VectorXd x_diff = Xsig_pred_.col(i) - x;
     // angle normalization
-    x_diff(3) = tools_.NormalizeAngle(x_diff(3));
+    tools_.NormalizeAngle(x_diff(3));
     P += weights_(i) * x_diff * x_diff.transpose();
   }
 
@@ -330,7 +330,7 @@ void UKF::PredictRadarMeasurement(MatrixXd* Zsig_out, VectorXd* z_out,
 
     double rho = sqrt((px * px) + (py * py));
     double phi = atan2(py, px);
-    double rho_dot = (px * cos(yaw) * v + py * sin(yaw) * v) / rho;
+    double rho_dot = (px * cos(yaw) * v + py * sin(yaw) * v) / max(0.0001, rho);
 
     // transform sigma points into measurement space
     Zsig.col(i) << rho, phi, rho_dot;
@@ -342,7 +342,7 @@ void UKF::PredictRadarMeasurement(MatrixXd* Zsig_out, VectorXd* z_out,
   for (int i = 0; i < n_sig_aug_; ++i) {
     MatrixXd z_diff = Zsig.col(i) - z_pred;
     // angle normalization
-    z_diff(1) = tools_.NormalizeAngle(z_diff(1));
+    tools_.NormalizeAngle(z_diff(1));
     S += weights_(i) * z_diff * z_diff.transpose();
   }
   S += R_radar_;
@@ -367,10 +367,10 @@ double UKF::UpdateState(const MeasurementPackage meas_package,
   int i = 0;
   for (i = 0; i < n_sig_aug_; ++i) {
     VectorXd x_diff = Xsig_pred_.col(i) - x_;
-    x_diff(3) = tools_.NormalizeAngle(x_diff(3));
+    tools_.NormalizeAngle(x_diff(3));
 
     VectorXd z_diff = Zsig.col(i) - z_pred;
-    z_diff(1) = tools_.NormalizeAngle(z_diff(1));
+    tools_.NormalizeAngle(z_diff(1));
 
     Tc += weights_(i) * x_diff * z_diff.transpose();
   }
@@ -378,7 +378,7 @@ double UKF::UpdateState(const MeasurementPackage meas_package,
   MatrixXd K = Tc * S.inverse();
   // update state mean and covariance matrix
   VectorXd z_diff = z - z_pred;
-  z_diff(1) = tools_.NormalizeAngle(z_diff(1));
+  tools_.NormalizeAngle(z_diff(1));
   P_ -= (K * S * K.transpose());
   x_ += (K * z_diff);
 
